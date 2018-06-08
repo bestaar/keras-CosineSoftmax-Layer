@@ -1,5 +1,5 @@
 # keras-CosineSoftmax-Layer
-Implementation of CosineSoftmax Layer for keras:
+Implementation of CosineSoftmax Layer for keras (softmax with normalized weights and normalized activations):
 
 
 I changed keras' Dense layer to implement Cosine Metric Learning as proposed in:
