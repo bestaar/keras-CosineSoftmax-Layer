@@ -6,7 +6,9 @@ I changed keras' Dense layer to implement Cosine Metric Learning as proposed in:
 
 Wojke, Nicolai and Bewley, Alex (2018) Deep Cosine Metric Learning for Person Re-Identification. In: IEEE Winter Conference on Applications of Computer Vision (WACV). [Manuscript accepted for publication]
 
-Implementation details: I changed the following function:
+**Implementation details:**
+
+I changed the following function:
 
 __output = K.dot(inputs, self.kernel)__
 
