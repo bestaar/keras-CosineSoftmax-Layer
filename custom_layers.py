@@ -110,7 +110,7 @@ class CosineSoftmax(Layer):
         self.built = True
 
     def call(self, inputs):
-        output = K.dot(K.l2_normalize(inputs), K.l2_normalize(self.kernel))
+        output = K.dot(K.l2_normalize(inputs,axis=1), K.l2_normalize(self.kernel,axis=0))
         if self.use_bias:
             output = K.bias_add(output, self.bias)
         if self.activation is not None:
