@@ -33,7 +33,7 @@ class CosineSoftmax(Layer):
             (see [activations](../activations.md)).
             If you don't specify anything, no activation is applied
             (ie. "linear" activation: `a(x) = x`).
-        use_bias: Boolean, whether the layer uses a bias vector.
+        use_scaling: Boolean, whether the cosine softmax layer learns a scaling factor (k in the paper).
         kernel_initializer: Initializer for the `kernel` weights matrix
             (see [initializers](../initializers.md)).
         bias_initializer: Initializer for the bias vector
@@ -64,9 +64,9 @@ class CosineSoftmax(Layer):
 ##    @interfaces.legacy_dense_support
     def __init__(self, units,
                  activation='softmax',
-                 use_bias=False,
+                 use_scaling=True,
                  kernel_initializer='lecun_normal',
-                 bias_initializer='zeros',
+                 bias_initializer='ones',
                  kernel_regularizer=None,
                  bias_regularizer=None,
                  activity_regularizer=None,
@@ -78,7 +78,7 @@ class CosineSoftmax(Layer):
         super(CosineSoftmax, self).__init__(**kwargs)
         self.units = units
         self.activation = activations.get(activation)
-        self.use_bias = use_bias
+        self.use_scaling = use_scaling
         self.kernel_initializer = initializers.get(kernel_initializer)
         self.bias_initializer = initializers.get(bias_initializer)
         self.kernel_regularizer = regularizers.get(kernel_regularizer)
@@ -98,8 +98,8 @@ class CosineSoftmax(Layer):
                                       name='kernel',
                                       regularizer=self.kernel_regularizer,
                                       constraint=self.kernel_constraint)
-        if self.use_bias:
-            self.bias = self.add_weight(shape=(self.units,),
+        if self.use_scaling:
+            self.bias = self.add_weight(shape=(1,),
                                         initializer=self.bias_initializer,
                                         name='bias',
                                         regularizer=self.bias_regularizer,
@@ -110,9 +110,12 @@ class CosineSoftmax(Layer):
         self.built = True
 
     def call(self, inputs):
-        output = K.dot(K.l2_normalize(inputs,axis=1), K.l2_normalize(self.kernel,axis=0))
-        if self.use_bias:
-            output = K.bias_add(output, self.bias)
+        if self.use_scaling:
+            # make sure the scaling factor is >1
+            k = K.relu(self.bias)+1
+            output = K.dot(K.l2_normalize(inputs,axis=1), k*K.l2_normalize(self.kernel,axis=0))
+        else:
+            output = K.dot(K.l2_normalize(inputs,axis=1), K.l2_normalize(self.kernel,axis=0))
         if self.activation is not None:
             output = self.activation(output)
         return output
@@ -128,7 +131,7 @@ class CosineSoftmax(Layer):
         config = {
             'units': self.units,
             'activation': activations.serialize(self.activation),
-            'use_bias': self.use_bias,
+            'use_scaling': self.use_scaling,
             'kernel_initializer': initializers.serialize(self.kernel_initializer),
             'bias_initializer': initializers.serialize(self.bias_initializer),
             'kernel_regularizer': regularizers.serialize(self.kernel_regularizer),
